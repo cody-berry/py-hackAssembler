@@ -8,4 +8,17 @@
 # 	ignore whitespace
 # 	ignore full-line comments
 # 	ignore mid-line comments
+#
+# intermediate coding plan:
+#
+#
+#
+#
+#
+
+assemblyFile = open("asm/MaxL.asm", "r")
+
+print(assemblyFile.read())
+
+assemblyFile.close()
 
