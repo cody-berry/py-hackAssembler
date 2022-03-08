@@ -18,7 +18,15 @@
 
 assemblyFile = open("asm/MaxL.asm", "r")
 
-print(assemblyFile.read())
+counter = 0
+for code in assemblyFile:
+    # omg we'll have to multiply this string a lot. " ".join(code.split()) will remove newline characters, and .replace(" ", "") will remove all whitespaces.
+    line = " ".join(code.split()).replace(" ", "")
+    print(f"{counter}: {line}, {len(line) > 1 and line[0] != '/' and line[0] != ' '}")
+    counter += 1
+
 
 assemblyFile.close()
+
+
 
