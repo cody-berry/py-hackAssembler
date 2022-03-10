@@ -17,9 +17,10 @@
 #
 
 #
-#  definitions borrowed from winry's project
+#  definitions borrowed from Winry's project
 #
 import string
+import math
 
 
 class Parser:
@@ -78,8 +79,6 @@ class Parser:
         }
 
 
-import math
-
 parser = Parser()
 
 
@@ -98,46 +97,47 @@ def decimal_to_binary(num):
     return binary_result
 
 
-assemblyFile = open("asm/PongL.asm", "r")
-output = open("asm/PongLCody.hack", "w")
+assemblyFile = open("asm/Rect.asm", "r")
+output = open("asm/RectCody.hack", "w")
 
-# # let's define our symbol table, used for finding labels and variables
-# symbolTable = {
-#     "R1": 1,
-#     "R2": 2,
-#     "R3": 3,
-#     "R4": 4,
-#     "R5": 5,
-#     "R6": 6,
-#     "R7": 7,
-#     "R8": 8,
-#     "R9": 9,
-#     "R10": 10,
-#     "R11": 11,
-#     "R12": 12,
-#     "R13": 13,
-#     "R14": 14,
-#     "R15": 15,
-#     "R0": 0,
-#     "SCREEN": 16384,
-#     "KBD": 24576,
-#     "SP": 0,
-#     "LCL": 1,
-#     "ARG": 2,
-#     "THIS": 3,
-#     "THAT": 4
-# }
-#
-# # we've added our pre-defined symbols, so now we should move on to our first pass, adding our labels.
-# linesPassed = 0
-# for code in assemblyFile:
-#     if code[0] == "(":
-#         symbolTable[code[1:-2]] = linesPassed
-#     elif code[0] != string.whitespace:
-#         linesPassed += 1
-#
+# let's define our symbol table, used for finding labels and variables
+symbolTable = {
+    "R1": 1,
+    "R2": 2,
+    "R3": 3,
+    "R4": 4,
+    "R5": 5,
+    "R6": 6,
+    "R7": 7,
+    "R8": 8,
+    "R9": 9,
+    "R10": 10,
+    "R11": 11,
+    "R12": 12,
+    "R13": 13,
+    "R14": 14,
+    "R15": 15,
+    "R0": 0,
+    "SCREEN": 16384,
+    "KBD": 24576,
+    "SP": 0,
+    "LCL": 1,
+    "ARG": 2,
+    "THIS": 3,
+    "THAT": 4
+}
+
+# we've added our pre-defined symbols, so now we should move on to our first pass, adding our labels.
+linesPassed = 0
+for code in assemblyFile:
+    if code[0] == "(":
+        symbolTable[code[1:-2]] = linesPassed
+    elif code[0] != string.whitespace:
+        linesPassed += 1
+
 # # we've done our first pass, so now we should move on to our second pass, adding our variables.
 # n = 16
+# print(assemblyFile.readline())
 # for code in assemblyFile:
 #     # omg we'll have to modify this string a lot. " ".join(code.split()) will remove newline characters, and .replace(" ", "") will remove all whitespaces.
 #     linePartOne = " ".join(code.split()).replace(" ", "")
@@ -151,79 +151,81 @@ output = open("asm/PongLCody.hack", "w")
 #
 #     if line[0] == "@":
 #         try:
-#             ignoreMePlease = int(line[1:-2])
+#             ignoreMePlease = int(line[1:])
 #         except ValueError:
-#             if symbolTable.get(line[1:-1]) is not None:
-#                 pass
-#
-# print(symbolTable)
+#             if symbolTable.get(line[1:]) is None:
+#                 symbolTable[line[1:]] = n
+#                 n += 1
+
+print(symbolTable)
 
 counter = 0
 for code in assemblyFile:
-    # omg we'll have to modify this string a lot. " ".join(code.split()) will remove newline characters, and .replace(" ", "") will remove all whitespaces.
-    linePartOne = " ".join(code.split()).replace(" ", "")
-    try:
-        indexOfAComment = linePartOne.index('/')
-    except ValueError:
-        indexOfAComment = 0
-    line = linePartOne
-    if indexOfAComment:
-        line = linePartOne[0:indexOfAComment]
-
-    print(line)
-
-    # is this whitespace or not? If not, then we should translate our instruction.
-    if len(line) > 1 and line[0] != '/' and line[0] != ' ':
-        # our finished translation
-        translation = ""
-        # is it an A instruction or a C instruction
-        if line[0] == "@":
-            # it is an A-instruction! we add the opcode, 0, add the result, and for each bit, we add the string translation of the bit
-            translation += "0"
-            result = decimal_to_binary(line[1:])
-            for bit in result:
-                translation += str(bit)
-        else:
-            # it's a C-instruction!
-            # add the opcode
-            translation += "111"
-            # destination
-            destinationIndex = -1
-            addDest = True
-            try:
-                destinationIndex = line.index("=")
-
-            # but what happens if there isn't? then it'll throw a ValueError.
-            except ValueError:
-                translation += "000"
-                addDest = False
-
-            # jump
-            jumpIndex = len(line)
-            addJump = True
-            try:
-                jumpIndex = line.index(";")
-
-            # but what happens if there isn't? then it'll throw a ValueError
-            except ValueError:
-                translation += "000"
-                addJump = False
-
-            # the comp can't be zero and I'm adding it in the correct order
-            translation += parser.compDict[line[destinationIndex+1:jumpIndex]]
-
-            # the destination index is the destination end and 0 is the start, and we don't need that if we're taking substrings here.
-            if addDest:
-                translation += parser.destDict[line[:destinationIndex]]
-
-            # `jumpIndex` is the jump start and the file's length is the end, and we don't need that if we're taking substrings here.
-            if addJump:
-                translation += parser.jumpDict[line[jumpIndex + 1:]]
-
-        print(f"{counter}: {line}, {translation}")
-        output.write(translation + "\n")
-
-    counter += 1
+    # # omg we'll have to modify this string a lot. " ".join(code.split()) will remove newline characters, and .replace(" ", "") will remove all whitespaces.
+    # linePartOne = " ".join(code.split()).replace(" ", "")
+    # try:
+    #     indexOfAComment = linePartOne.index('/')
+    # except ValueError:
+    #     indexOfAComment = 0
+    # line = linePartOne
+    # if indexOfAComment:
+    #     line = linePartOne[0:indexOfAComment]
+    #
+    # print(line)
+    #
+    # # is this whitespace or not? If not, then we should translate our instruction.
+    # if len(line) > 1 and line[0] != '/' and line[0] != ' ':
+    #     # our finished translation
+    #     translation = ""
+    #     # is it an A instruction or a C instruction
+    #     if line[0] == "@":
+    #         # it is an A-instruction! we add the opcode, 0, add the result, and for each bit, we add the string translation of the bit
+    #         translation += "0"
+    #         result = decimal_to_binary(line[1:])
+    #         for bit in result:
+    #             translation += str(bit)
+    #     else:
+    #         # it's a C-instruction!
+    #         # add the opcode
+    #         translation += "111"
+    #         # destination
+    #         destinationIndex = -1
+    #         addDest = True
+    #         try:
+    #             destinationIndex = line.index("=")
+    #
+    #         # but what happens if there isn't? then it'll throw a ValueError.
+    #         except ValueError:
+    #             translation += "000"
+    #             addDest = False
+    #
+    #         # jump
+    #         jumpIndex = len(line)
+    #         addJump = True
+    #         try:
+    #             jumpIndex = line.index(";")
+    #
+    #         # but what happens if there isn't? then it'll throw a ValueError
+    #         except ValueError:
+    #             translation += "000"
+    #             addJump = False
+    #
+    #         # the comp can't be zero and I'm adding it in the correct order
+    #         translation += parser.compDict[line[destinationIndex+1:jumpIndex]]
+    #
+    #         # the destination index is the destination end and 0 is the start, and we don't need that if we're taking substrings here.
+    #         if addDest:
+    #             translation += parser.destDict[line[:destinationIndex]]
+    #
+    #         # `jumpIndex` is the jump start and the file's length is the end, and we don't need that if we're taking substrings here.
+    #         if addJump:
+    #             translation += parser.jumpDict[line[jumpIndex + 1:]]
+    #
+    #     print(f"{counter}: {line}, {translation}")
+    #     output.write(translation + "\n")
+    #
+    # counter += 1
+    pass
 
 assemblyFile.close()
 output.close()
