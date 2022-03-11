@@ -82,6 +82,7 @@ class Parser:
 parser = Parser()
 
 
+# translates decimal numbers to binary parts of machine code (useful for translating A instructions)
 def decimal_to_binary(num):
     # the result that we're going to return starts at an empty list
     binary_result = []
@@ -91,12 +92,13 @@ def decimal_to_binary(num):
 
     # as long as the length of the result is less than 15...
     while len(binary_result) < 15:
+        # we insert the status of odd/even at the left of the list
         binary_result.insert(0, number % 2)
         number = math.floor(number / 2)
 
     return binary_result
 
-
+# open our assembly file and our output
 assemblyFile = open("asm/Max.asm", "r")
 output = open("asm/MaxCody.hack", "w")
 
@@ -140,9 +142,12 @@ for code in assemblyFile:
     if indexOfAComment:
         line = linePartOne[0:indexOfAComment]
 
+    # if it's a label (it will raise an error if we don't have len(line) > 0)...
     if len(line) > 0 and line[0] == "(":
+        # we add it to our symbol table.
         symbolTable[line[1:-1]] = linesPassed
     elif len(line) > 0 and line[0] != string.whitespace and code[0] != "/":
+        # Otherwise and if it's not whitespace or comments, we increment how many lines have passed.
         linesPassed += 1
 
 assemblyFile.close()
@@ -162,10 +167,13 @@ for code in assemblyFile:
     if indexOfAComment:
         line = linePartOne[0:indexOfAComment]
 
+    # The line can only have a variable if it is an A instruction.
     if len(line) > 0 and line[0] == "@":
         try:
+            # let's try taking the int version of it, but it will raise a ValueError if it is a symbol.
             ignoreMePlease = int(line[1:])
         except ValueError:
+            # but we accept that! If that variable hasn't been added before, we add it.
             if symbolTable.get(line[1:]) is None:
                 symbolTable[line[1:]] = n
                 n += 1
@@ -191,7 +199,7 @@ for code in assemblyFile:
 
     print(line)
 
-    # is this whitespace or not? If not, then we should translate our instruction.
+    # is this whitespace? If not, then we should translate our instruction.
     if len(line) > 1 and line[0] != '/' and line[0] != ' ' and line[0] != "(":
         # our finished translation
         translation = ""
@@ -232,7 +240,7 @@ for code in assemblyFile:
                 translation += "000"
                 addJump = False
 
-            # the comp can't be zero, and I'm adding it in the correct order
+            # the comp can't be zero, so there's no trigger.
             translation += parser.compDict[line[destinationIndex+1:jumpIndex]]
 
             # the destination index is the destination end and 0 is the start, and we don't need that if we're taking substrings here.
@@ -243,11 +251,13 @@ for code in assemblyFile:
             if addJump:
                 translation += parser.jumpDict[line[jumpIndex + 1:]]
 
+        # print our information like the following:
+        # lineNumber: line, translation
         print(f"{counter}: {line}, {translation}")
         output.write(translation + "\n")
 
+    # what line is this
     counter += 1
-    # pass
 
 assemblyFile.close()
 output.close()
